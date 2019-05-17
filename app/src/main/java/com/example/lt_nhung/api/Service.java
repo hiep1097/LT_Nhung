@@ -10,8 +10,8 @@ import retrofit2.http.POST;
 import retrofit2.http.QueryMap;
 
 public interface Service {
-    @GET("weather")
-    Observable<Record> getRecord(@QueryMap Map<String,String> options);
-    @POST("weather")
+//    @GET("weather")
+//    Observable<Record> getRecord(@QueryMap Map<String,String> options);
+    @POST()
     Observable<Record> sendRecord(@QueryMap Map<String,String> options);
 }

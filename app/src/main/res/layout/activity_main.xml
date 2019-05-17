@@ -117,7 +117,18 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tv_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="abc"
+        android:textSize="20sp"
+        android:layout_above="@+id/ln2"
+        android:layout_marginBottom="100dp"
+        />
+
     <LinearLayout
+        android:id="@+id/ln2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
