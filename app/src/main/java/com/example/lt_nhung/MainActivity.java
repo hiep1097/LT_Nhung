@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,14 +40,17 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
+import okhttp3.Authenticator;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Credentials;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.Route;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     Button mDieuHoa, mNongLanh, mDen1, mDen2;
@@ -290,10 +294,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void guiFileLenServer() {
 
-//        CertificatePinner certificatePinner = new CertificatePinner.Builder()
-//                .add("https://vtcc.ai/voice/api/asr/v1/rest/decode_file", "sha256/RjA6QTM6RTg6MUY6MUY6MDY6OTU6QUU6M0U6N0Y6Rjc6ODg6MzE6RkI6NEE6OTA6NTY6MkI6QTQ6REI6MkE6Mzk6MkU6Q0U6NTU6RUQ6ODc6MTg6QzI6REQ6N0I6OEQ=")
-//                .build();
-
         KeyStore keyStore = readKeyStore(); //your method to obtain KeyStore
         SSLContext sslContext = null;
         try {
@@ -382,10 +382,64 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String text = element1.getString("transcript");
             Log.d("textttttt",text);
             mResult.setText("Nội dung:"+text);
+            xxx(text);
         } catch (JSONException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void xxx(String text){
+        OkHttpClient client = new OkHttpClient.Builder().authenticator(new Authenticator() {
+            public Request authenticate(Route route, Response response) throws IOException {
+                String credential = Credentials.basic("admin", "admin");
+                return response.request().newBuilder().header("Authorization", credential).build();
+            }
+        }).build();
+
+        MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
+        RequestBody body = RequestBody.create(mediaType, "{\n\t\"text\": \"" + text + "s\"\n}");
+        Request request = new Request.Builder()
+                .url("http://192.168.1.28:5000/say/")
+                .post(body)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Basic YWRtaW46YWRtaW4=")
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                } else {
+                    // do something wih the result
+                    //  Log.d("responseeeeeee",response.body().string());
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            TextView tv = MainActivity.this.findViewById(R.id.tv_result_1);
+                            try {
+                                String xx = response.body().string();
+                                JSONObject root = new JSONObject(xx);
+                                String res = root.getString("text");
+                                tv.setText(res);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                }
+            }
+        });
+        Toast.makeText(this,"Done",Toast.LENGTH_SHORT).show();
     }
 }
