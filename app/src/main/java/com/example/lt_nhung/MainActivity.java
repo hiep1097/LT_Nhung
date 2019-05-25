@@ -128,17 +128,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_den1:
                 den1 = !den1;
                 if (den1){
-                    guiLenhChoPi("Bật đèn 1");
+                    guiLenhChoPi("Bật đèn phòng khách");
                 } else {
-                    guiLenhChoPi("Tắt đèn 1");
+                    guiLenhChoPi("Tắt đèn phòng khách");
                 }
                 break;
             case R.id.btn_den2:
                 den2 = !den2;
                 if (den2){
-                    guiLenhChoPi("Bật đèn 2");
+                    guiLenhChoPi("Bật đèn hành lang");
                 } else {
-                    guiLenhChoPi("Tắt đèn 2");
+                    guiLenhChoPi("Tắt đèn hành lang");
                 }
                 break;
             case R.id.btn_bat_all:
@@ -271,7 +271,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void guiLenhChoPi(String text){
         mResult.setText("Lệnh gửi đi: "+text);
-        
+
         OkHttpClient client = new OkHttpClient.Builder().authenticator(new Authenticator() {
             public Request authenticate(Route route, Response response) throws IOException {
                 String credential = Credentials.basic("admin", "admin");
@@ -280,9 +280,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).build();
 
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
-        RequestBody body = RequestBody.create(mediaType, "{\n\t\"text\": \"" + text + "s\"\n}");
+        RequestBody body = RequestBody.create(mediaType, "{\"text\": \"" + text + "\"}");
         Request request = new Request.Builder()
-                .url("http://192.168.1.28:5000/say/")
+                .url("http://192.168.1.64:5000/say/")
                 .post(body)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Basic YWRtaW46YWRtaW4=")
@@ -304,12 +304,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            TextView tv = MainActivity.this.findViewById(R.id.tv_result_1);
                             try {
                                 String xx = response.body().string();
                                 JSONObject root = new JSONObject(xx);
+                                int status = root.getInt("status");
                                 String res = root.getString("text");
-                                tv.setText("Pi trả về: "+res);
+                                updateView(status, res);
                             } catch (Exception e) {
                             }
                         }
@@ -319,6 +319,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         Toast.makeText(this,text+ " done!",Toast.LENGTH_SHORT).show();
+    }
+
+    private void updateView(int status, String res){
+        TextView tv = MainActivity.this.findViewById(R.id.tv_result_1);
+        tv.setText("Pi trả về: "+res);
+        switch (status){
+            case 0:
+                den1 = true;
+                break;
+            case 1:
+                den1 = false;
+                break;
+            case 2:
+                dieuHoa = true;
+                break;
+            case 3:
+                dieuHoa = false;
+                break;
+            case 4:
+                nongLanh = true;
+                break;
+            case 5:
+                nongLanh = false;
+                break;
+            case 6:
+                den2 = true;
+                break;
+            case 7:
+                den2 = false;
+                break;
+            case 10:
+                dieuHoa = nongLanh = den1 = den2 = true;
+                break;
+            case 11:
+                dieuHoa = nongLanh = den1 = den2 = false;
+                break;
+        }
+        checkStatus();
     }
 
     @Override

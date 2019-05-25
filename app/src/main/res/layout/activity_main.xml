@@ -87,7 +87,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đèn 1"
+                android:text="Đèn phòng khách"
                 android:textColor="#000"
                 android:textSize="20sp"
                 />
@@ -110,7 +110,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Đèn 2"
+                android:text="Đèn hành lang"
                 android:textColor="#000"
                 android:textSize="20sp"
                 />
