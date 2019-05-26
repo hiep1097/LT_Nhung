@@ -17,9 +17,11 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+
 import okhttp3.Authenticator;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -50,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     WavRecorder wavRecorder;
     TextView mResult;
     private Handler mHandler;
+    boolean block = false;
+
     public static boolean hasPermissions(Context context, String... permissions) {
         if (context != null && permissions != null) {
             for (String permission : permissions) {
@@ -65,11 +70,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
+        block = false;
         initView();
         initRecorder();
-
+        mStartRecord.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                block = false;
+                Toast.makeText(MainActivity.this,"Reset",Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
 
     }
 
@@ -108,58 +121,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_dieuhoa:
-                dieuHoa = !dieuHoa;
-                if (dieuHoa){
-                    guiLenhChoPi("Bật điều hòa");
-                } else {
-                    guiLenhChoPi("Tắt điều hòa");
-                }
-                break;
-            case R.id.btn_nonglanh:
-                nongLanh = !nongLanh;
-                if (nongLanh){
-                    guiLenhChoPi("Bật nóng lạnh");
-                } else {
-                    guiLenhChoPi("Tắt nóng lạnh");
-                }
-                break;
-            case R.id.btn_den1:
-                den1 = !den1;
-                if (den1){
-                    guiLenhChoPi("Bật đèn phòng khách");
-                } else {
-                    guiLenhChoPi("Tắt đèn phòng khách");
-                }
-                break;
-            case R.id.btn_den2:
-                den2 = !den2;
-                if (den2){
-                    guiLenhChoPi("Bật đèn hành lang");
-                } else {
-                    guiLenhChoPi("Tắt đèn hành lang");
-                }
-                break;
-            case R.id.btn_bat_all:
-                dieuHoa = nongLanh = den1 = den2 = true;
-                guiLenhChoPi("Bật tất cả");
-                break;
-            case R.id.btn_tat_all:
-                dieuHoa = nongLanh = den1 = den2 = false;
-                guiLenhChoPi("Tắt tất cả");
-                break;
-            case R.id.btn_start_record:
-                onRecord(true);
-                break;
-            case R.id.btn_stop_record:
-                onRecord(false);
-                break;
+//        if (v==mStartRecord){
+//            onRecord(true);
+        if (v==mStopRecord){
+            onRecord(false);
         }
-        checkStatus();
+        else if (!block) {
+            block = true;
+            switch (v.getId()) {
+                case R.id.btn_dieuhoa:
+                    dieuHoa = !dieuHoa;
+                    if (dieuHoa) {
+                        guiLenhChoPi("Bật điều hòa");
+                    } else {
+                        guiLenhChoPi("Tắt điều hòa");
+                    }
+                    break;
+                case R.id.btn_nonglanh:
+                    nongLanh = !nongLanh;
+                    if (nongLanh) {
+                        guiLenhChoPi("Bật nóng lạnh");
+                    } else {
+                        guiLenhChoPi("Tắt nóng lạnh");
+                    }
+                    break;
+                case R.id.btn_den1:
+                    den1 = !den1;
+                    if (den1) {
+                        guiLenhChoPi("Bật đèn phòng khách");
+                    } else {
+                        guiLenhChoPi("Tắt đèn phòng khách");
+                    }
+                    break;
+                case R.id.btn_den2:
+                    den2 = !den2;
+                    if (den2) {
+                        guiLenhChoPi("Bật đèn hành lang");
+                    } else {
+                        guiLenhChoPi("Tắt đèn hành lang");
+                    }
+                    break;
+                case R.id.btn_bat_all:
+                    dieuHoa = nongLanh = den1 = den2 = true;
+                    guiLenhChoPi("Bật tất cả");
+                    break;
+                case R.id.btn_tat_all:
+                    dieuHoa = nongLanh = den1 = den2 = false;
+                    guiLenhChoPi("Tắt tất cả");
+                    break;
+                case R.id.btn_start_record:
+                    onRecord(true);
+                    block = false;
+                    break;
+//                case R.id.btn_stop_record:
+//                    onRecord(false);
+//                    break;
+            }
+            checkStatus();
+        }
     }
 
-    private void checkStatus(){
+    private void checkStatus() {
         if (dieuHoa) {
             mDieuHoa.setBackground(getResources().getDrawable(R.drawable.ic_dieuhoa_bat));
         } else {
@@ -218,19 +240,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (IOException e) {
             e.printStackTrace();
         }
-        speechToText();
+        if (!block) {
+            block = true;
+            speechToText();
+        }
+
     }
 
     private void speechToText() {
         OkHttpClient client = new OkHttpClient();
-        RequestBody body = RequestBody.create(null,new File(fileName));
+        RequestBody body = RequestBody.create(null, new File(fileName));
         Request request = new Request.Builder()
                 .url("https://api.openfpt.vn/fsr")
                 .post(body)
-                .addHeader("api_key", "f35c15b5e792417fa50e0b2344749f92")
+                .addHeader("api_key", "0cc0805efb6f4126a076613a6215a7af")
                 .addHeader("Content-Type", "")
                 .build();
-
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -240,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
                 if (!response.isSuccessful()) {
+                    block = false;
                     throw new IOException("Unexpected code " + response);
                 } else {
                     // do something wih the result
@@ -249,28 +275,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             updateLenh(response);
                         }
                     });
-
                 }
             }
         });
     }
 
-    public void updateLenh(Response response){
+    public void updateLenh(Response response) {
         try {
             String json = response.body().string();
-            Log.d("responseeeeeee",json);
+            Log.d("responseeeeeee", json);
             JSONObject root = new JSONObject(json);
             JSONArray hypotheses = root.getJSONArray("hypotheses");
             JSONObject element1 = (JSONObject) hypotheses.get(0);
             String text = element1.getString("utterance");
-            Log.d("textttttt",text);
+            Log.d("textttttt", text);
             guiLenhChoPi(text);
         } catch (Exception e) {
         }
     }
 
-    public void guiLenhChoPi(String text){
-        mResult.setText("Lệnh gửi đi: "+text);
+    public void guiLenhChoPi(String text) {
+        mResult.setText("Lệnh gửi đi: " + text);
 
         OkHttpClient client = new OkHttpClient.Builder().authenticator(new Authenticator() {
             public Request authenticate(Route route, Response response) throws IOException {
@@ -282,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
         RequestBody body = RequestBody.create(mediaType, "{\"text\": \"" + text + "\"}");
         Request request = new Request.Builder()
-                .url("http://192.168.1.64:5000/say/")
+                .url("http://192.168.43.191:5000/say/")
                 .post(body)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Authorization", "Basic YWRtaW46YWRtaW4=")
@@ -297,6 +322,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onResponse(Call call, final Response response) throws IOException {
                 if (!response.isSuccessful()) {
+                    block = false;
                     throw new IOException("Unexpected code " + response);
                 } else {
                     // do something wih the result
@@ -314,17 +340,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             }
                         }
                     });
-
                 }
             }
         });
-        Toast.makeText(this,text+ " done!",Toast.LENGTH_SHORT).show();
     }
 
-    private void updateView(int status, String res){
+    private void updateView(int status, String res) {
+        block = false;
         TextView tv = MainActivity.this.findViewById(R.id.tv_result_1);
-        tv.setText("Pi trả về: "+res);
-        switch (status){
+        tv.setText("Pi trả về: " + res);
+        switch (status) {
             case 0:
                 den1 = true;
                 break;
@@ -355,8 +380,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case 11:
                 dieuHoa = nongLanh = den1 = den2 = false;
                 break;
+            case 200:
+                tv.setText("Pi trả về: " + res);
+                break;
         }
         checkStatus();
+        Toast.makeText(this, res + " done!", Toast.LENGTH_SHORT).show();
     }
 
     @Override
